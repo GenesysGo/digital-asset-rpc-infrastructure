@@ -18,15 +18,15 @@ serde_json = { version = "1.0.81", optional = true }
 bs58 = "0.4.0"
 borsh = { version = "0.9.3", optional = true }
 borsh-derive = { version = "0.9.3", optional = true }
-solana-sdk = { version = "=1.10.10" }
+solana-sdk = { version = "1.11.7" }
 num-traits = "0.2.15"
 num-derive = "0.3.3"
 thiserror = "1.0.31"
-concurrent-merkle-tree = {path = "../lib/concurrent-merkle-tree" }
+concurrent-merkle-tree = { git = "https://github.com/GenesysGo/candyland" }
 mpl-token-metadata = { git = "https://github.com/jarry-xiao/metaplex-program-library", rev = "7e2810a", features = ["no-entrypoint"] }
 jsonpath_lib = "0.3.0"
 mime_guess = "2.0.4"
 url = "2.2.2"
-anchor-client = { path="../deps/anchor/client" }
+anchor-client = { git = "https://github.com/GenesysGo/anchor", branch = "tracy/test-validator-geyser-config-and-spl-version" }
 futures= "0.3.21"
 tokio = { version="1.19.2" }

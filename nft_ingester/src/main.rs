@@ -14,7 +14,7 @@ use {
         utils::{order_instructions, parse_logs},
     },
     futures_util::TryFutureExt,
-    messenger::{Messenger, RedisMessenger, ACCOUNT_STREAM, TRANSACTION_STREAM},
+    plerkle_messenger::{Messenger, RedisMessenger, ACCOUNT_STREAM, TRANSACTION_STREAM},
     plerkle_serialization::account_info_generated::account_info::root_as_account_info,
     plerkle_serialization::transaction_info_generated::transaction_info::root_as_transaction_info,
     solana_sdk::pubkey::Pubkey,
@@ -29,7 +29,7 @@ use {
     cadence::{BufferedUdpMetricSink, QueuingMetricSink, StatsdClient},
     std::net::UdpSocket,
 };
-use messenger::MessengerConfig;
+use plerkle_messenger::MessengerConfig;
 use crate::error::IngesterError;
 use crate::tasks::{BgTask, TaskManager};
 

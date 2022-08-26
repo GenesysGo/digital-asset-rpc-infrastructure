@@ -8,7 +8,7 @@ use {
     },
     digital_asset_types::dao::backfill_items,
     flatbuffers::FlatBufferBuilder,
-    messenger::{Messenger, TRANSACTION_STREAM},
+    plerkle_messenger::{Messenger, TRANSACTION_STREAM},
     plerkle_serialization::transaction_info_generated::transaction_info::{
         self, TransactionInfo, TransactionInfoArgs,
     },
