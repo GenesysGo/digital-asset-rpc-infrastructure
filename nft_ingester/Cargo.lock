@@ -2623,7 +2623,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-postgres",
- "toml",
  "uuid",
 ]
 
@@ -3127,7 +3126,7 @@ checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 [[package]]
 name = "plerkle_messenger"
 version = "0.0.1"
-source = "git+https://github.com/GenesysGo/digital-asset-validator-plugin?branch=tracy/fixes#d800ab98e65da50d3a4d7fdb434f9b9a2713583f"
+source = "git+https://github.com/GenesysGo/digital-asset-validator-plugin?branch=main#e2a0eb303fa40b39465b4c70afad8236e4278b22"
 dependencies = [
  "async-mutex",
  "async-trait",
@@ -3145,7 +3144,7 @@ dependencies = [
 [[package]]
 name = "plerkle_serialization"
 version = "0.0.1"
-source = "git+https://github.com/GenesysGo/digital-asset-validator-plugin?branch=tracy/fixes#d800ab98e65da50d3a4d7fdb434f9b9a2713583f"
+source = "git+https://github.com/GenesysGo/digital-asset-validator-plugin?branch=main#e2a0eb303fa40b39465b4c70afad8236e4278b22"
 dependencies = [
  "flatbuffers",
 ]
