@@ -1,0 +1,12 @@
+metrics_port = 6942
+metrics_host = "idkwhatthisistbh"
+
+[database_config]
+url = "asdf"
+
+[messenger_config]
+messenger_type = "Redis"
+connection_config = { "redis_connection_str" = "redis//localhost/"}
+
+[rpc_config]
+asdf = "asdf"
