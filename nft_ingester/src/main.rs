@@ -80,13 +80,20 @@ fn setup_metrics(config: &IngesterConfig) {
 async fn main() {
     // Read config.
     println!("Starting DASgester");
-    let config: IngesterConfig = Figment::new()
-        .join(Env::prefixed("INGESTER_"))
-        .extract()
-        .map_err(|config_error| IngesterError::ConfigurationError {
-            msg: format!("{}", config_error),
-        })
-        .unwrap();
+    let config: IngesterConfig = {
+
+        toml::from_str(
+            &std::fs::read_to_string("ingester_config.toml")
+                .expect("failed to read ingester_config.toml")
+        ).expect("failed to deserialize toml")
+        // Figment::new()
+        // .join(Env::prefixed("INGESTER_"))
+        // .extract()
+        // .map_err(|config_error| IngesterError::ConfigurationError {
+        //     msg: format!("{}", config_error),
+        // })
+        // .unwrap()
+    };
     // Get database config.
     let url = config
         .database_config
