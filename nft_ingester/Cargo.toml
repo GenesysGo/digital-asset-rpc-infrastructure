@@ -23,12 +23,12 @@ serde = "1.0.136"
 bs58 = "0.4.0"
 reqwest = "0.11.11"
 csv = "1.1.6"
-plerkle_messenger = { git = "https://github.com/GenesysGo/digital-asset-validator-plugin" , branch="tracy/fixes" }
+plerkle_messenger = { git = "https://github.com/GenesysGo/digital-asset-validator-plugin", branch = "main"}
 flatbuffers = "2.1.2"
 solana-sdk = { version = "1.11.7" }
 lazy_static = "1.4.0"
 regex = "1.5.5"
-plerkle_serialization = { git = "https://github.com/GenesysGo/digital-asset-validator-plugin" , branch="tracy/fixes" }
+plerkle_serialization = { git = "https://github.com/GenesysGo/digital-asset-validator-plugin", branch = "main"}
 digital_asset_types = { path = "../digital_asset_types", features = ["json_types", "sql_types"] }
 uuid = "1.0.0"
 async-trait = "0.1.53"
@@ -40,7 +40,6 @@ cadence = "0.29.0"
 cadence-macros = "0.29.0"
 solana-client = "1.11.7"
 solana-transaction-status="1.11.7"
-toml = "0.5.9"
 
 [dependencies.num-integer]
 version = "0.1.44"
