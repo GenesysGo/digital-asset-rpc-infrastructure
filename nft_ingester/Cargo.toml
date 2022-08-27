@@ -40,6 +40,7 @@ cadence = "0.29.0"
 cadence-macros = "0.29.0"
 solana-client = "1.11.7"
 solana-transaction-status="1.11.7"
+toml = "0.5.9"
 
 [dependencies.num-integer]
 version = "0.1.44"
