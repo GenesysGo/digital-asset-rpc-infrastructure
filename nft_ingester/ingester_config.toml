@@ -2,11 +2,13 @@ metrics_port = 6942
 metrics_host = "idkwhatthisistbh"
 
 [database_config]
-url = "asdf"
+url = "postgresql://root@localhost:26257/nfts?sslmode=disable"
+listener_channel = "backfill_items"
 
 [messenger_config]
 messenger_type = "Redis"
-connection_config = { "redis_connection_str" = "redis//localhost/"}
+connection_config = { "redis_connection_str" = "redis://localhost/"}
 
 [rpc_config]
-asdf = "asdf"
+url = "http://localhost:8899"
+commitment = "processed"
