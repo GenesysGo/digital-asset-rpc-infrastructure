@@ -1,16 +1,18 @@
 mod backfiller;
 mod error;
 mod events;
-mod parsers;
+mod program_transformers;
 mod tasks;
 mod utils;
+mod metrics;
 
-use cadence_macros::statsd_time;
 use chrono::Utc;
+use plerkle_messenger::{ACCOUNT_STREAM, Messenger, MessengerConfig, RedisMessenger, TRANSACTION_STREAM};
+
 use {
     crate::{
         backfiller::backfiller,
-        parsers::*,
+        program_transformers::*,
         utils::{order_instructions, parse_logs},
     },
     futures_util::TryFutureExt,
@@ -25,25 +27,26 @@ use {
     cadence_macros::{
         set_global_default,
         statsd_count,
+        statsd_time
     },
     cadence::{BufferedUdpMetricSink, QueuingMetricSink, StatsdClient},
     std::net::UdpSocket,
 };
+use blockbuster::{
+    instruction::InstructionBundle
+};
 use plerkle_messenger::MessengerConfig;
 use crate::error::IngesterError;
+use crate::program_handler::ProgramHandlerManager;
 use crate::tasks::{BgTask, TaskManager};
 
 async fn setup_manager<'a, 'b>(
-    mut manager: ProgramHandlerManager<'a>,
+    mut manager: ProgramTransformer<'a>,
     pool: Pool<Postgres>,
     task_manager: UnboundedSender<Box<dyn BgTask>>,
-) -> ProgramHandlerManager<'a> {
+) -> ProgramTransformer<'a> {
     // Panic if thread cant be made for background tasks
-    let bubblegum_parser = BubblegumHandler::new(pool.clone(), task_manager);
-    let gummyroll_parser = GummyRollHandler::new(pool.clone());
-    manager.register_parser(Box::new(bubblegum_parser));
-    manager.register_parser(Box::new(gummyroll_parser));
-    manager
+
 }
 
 // Types and constants used for Figment configuration items.
@@ -140,7 +143,7 @@ async fn service_transaction_stream<T: Messenger>(
     messenger_config: MessengerConfig,
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        let mut manager = ProgramHandlerManager::new();
+        let mut manager = ProgramTransformer::new();
 
         manager = setup_manager(manager, pool, tasks).await;
         let mut messenger = T::new(messenger_config).await.unwrap();
@@ -161,7 +164,7 @@ async fn service_account_stream<T: Messenger>(
     messenger_config: MessengerConfig,
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        let mut manager = ProgramHandlerManager::new();
+        let mut manager = ProgramTransformer::new();
         let task_manager = TaskManager::new("background-tasks".to_string(), pool.clone()).unwrap();
         manager = setup_manager(manager, pool, tasks).await;
         let mut messenger = T::new(messenger_config).await.unwrap();
@@ -176,7 +179,7 @@ async fn service_account_stream<T: Messenger>(
     })
 }
 
-async fn handle_account(manager: &ProgramHandlerManager<'static>, data: Vec<(i64, &[u8])>) {
+async fn handle_account(manager: &ProgramTransformer<'static>, data: Vec<(i64, &[u8])>) {
     for (_message_id, data) in data {
         // Get root of account info flatbuffers object.
         let account_update = match root_as_account_info(data) {
@@ -206,7 +209,7 @@ async fn handle_account(manager: &ProgramHandlerManager<'static>, data: Vec<(i64
     }
 }
 
-async fn handle_transaction(manager: &ProgramHandlerManager<'static>, data: Vec<(i64, &[u8])>) {
+async fn handle_transaction(manager: &ProgramTransformer<'static>, data: Vec<(i64, &[u8])>) {
     for (message_id, data) in data {
         println!("RECV");
         //TODO -> Dedupe the stream, the stream could have duplicates as a way of ensuring fault tolerance if one validator node goes down.
@@ -257,7 +260,6 @@ async fn handle_transaction(manager: &ProgramHandlerManager<'static>, data: Vec<
                 Some(p) if p.config().responds_to_instruction == true => {
                     let _ = p
                         .handle_instruction(&InstructionBundle {
-                            message_id,
                             txn_id: "".to_string(),
                             instruction,
                             inner_ix,

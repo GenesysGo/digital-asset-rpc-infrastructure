@@ -1,12 +1,10 @@
 [package]
 name = "nft_ingester"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 [dependencies]
 hex = "0.4.3"
-routerify = "3"
-routerify-json-response = "3"
 redis = { version = "0.21.5", features = ["aio", "tokio-comp", "streams"] }
 futures-util = "0.3.0"
 hyper = "0.14"

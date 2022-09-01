@@ -16,7 +16,6 @@ services:
     environment:
       APP_DATABASE_URL: postgres://solana:solana@db/solana
       APP_SERVER_PORT: 9090
-      APP_METRICS_PORT: 9091
     build:
       context: .
       dockerfile: Api.Dockerfile
@@ -38,9 +37,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./db-data/:/var/lib/postgresql/data/:rw
   solana:
-    build:
-      context: .
-      dockerfile: Solana.Dockerfile
+    image: ghcr.io/metaplex-foundation/plerkle-test-validator:0.0.2
     volumes:
     - ./ledger:/config:rw
     environment:
