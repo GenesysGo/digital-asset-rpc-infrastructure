@@ -5,33 +5,30 @@ mod parsers;
 mod tasks;
 mod utils;
 
+use crate::error::IngesterError;
+use crate::tasks::{BgTask, TaskManager};
 use cadence_macros::statsd_time;
 use chrono::Utc;
+use plerkle_messenger::MessengerConfig;
 use {
     crate::{
         backfiller::backfiller,
         parsers::*,
         utils::{order_instructions, parse_logs},
     },
+    cadence::{BufferedUdpMetricSink, QueuingMetricSink, StatsdClient},
+    cadence_macros::{set_global_default, statsd_count},
+    figment::{providers::Env, Figment},
     futures_util::TryFutureExt,
     plerkle_messenger::{Messenger, RedisMessenger, ACCOUNT_STREAM, TRANSACTION_STREAM},
     plerkle_serialization::account_info_generated::account_info::root_as_account_info,
     plerkle_serialization::transaction_info_generated::transaction_info::root_as_transaction_info,
+    serde::Deserialize,
     solana_sdk::pubkey::Pubkey,
     sqlx::{self, postgres::PgPoolOptions, Pool, Postgres},
-    tokio::sync::mpsc::UnboundedSender,
-    serde::Deserialize,
-    figment::{Figment, providers::Env},
-    cadence_macros::{
-        set_global_default,
-        statsd_count,
-    },
-    cadence::{BufferedUdpMetricSink, QueuingMetricSink, StatsdClient},
     std::net::UdpSocket,
+    tokio::sync::mpsc::UnboundedSender,
 };
-use plerkle_messenger::MessengerConfig;
-use crate::error::IngesterError;
-use crate::tasks::{BgTask, TaskManager};
 
 async fn setup_manager<'a, 'b>(
     mut manager: ProgramHandlerManager<'a>,
@@ -64,28 +61,28 @@ pub struct IngesterConfig {
     pub metrics_host: String,
 }
 
-fn setup_metrics(config: &IngesterConfig) {
-    let uri = config.metrics_host.clone();
-    let port = config.metrics_port.clone();
-    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    socket.set_nonblocking(true).unwrap();
-    let host = (uri, port);
-    let udp_sink = BufferedUdpMetricSink::from(host, socket).unwrap();
-    let queuing_sink = QueuingMetricSink::from(udp_sink);
-    let client = StatsdClient::from_sink("das_ingester", queuing_sink);
-    set_global_default(client);
-}
+// fn setup_metrics(config: &IngesterConfig) {
+//     let uri = config.metrics_host.clone();
+//     let port = config.metrics_port.clone();
+//     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+//     socket.set_nonblocking(true).unwrap();
+//     let host = (uri, port);
+//     let udp_sink = BufferedUdpMetricSink::from(host, socket).unwrap();
+//     let queuing_sink = QueuingMetricSink::from(udp_sink);
+//     let client = StatsdClient::from_sink("das_ingester", queuing_sink);
+//     set_global_default(client);
+// }
 
 #[tokio::main]
 async fn main() {
     // Read config.
     println!("Starting DASgester");
     let config: IngesterConfig = {
-
         toml::from_str(
             &std::fs::read_to_string("ingester_config.toml")
-                .expect("failed to read ingester_config.toml")
-        ).expect("failed to deserialize toml")
+                .expect("failed to read ingester_config.toml"),
+        )
+        .expect("failed to deserialize toml")
         // Figment::new()
         // .join(Env::prefixed("INGESTER_"))
         // .extract()
@@ -114,9 +111,16 @@ async fn main() {
         TaskManager::new("background-tasks".to_string(), pool.clone()).unwrap();
     // Service streams as separate concurrent processes.
     println!("Setting up tasks");
-    setup_metrics(&config);
-    tasks.push(service_transaction_stream::<RedisMessenger>(pool.clone(), background_task_manager.get_sender(), config.messenger_config.clone()).await);
-    statsd_count!("ingester.startup", 1);
+    // setup_metrics(&config);
+    tasks.push(
+        service_transaction_stream::<RedisMessenger>(
+            pool.clone(),
+            background_task_manager.get_sender(),
+            config.messenger_config.clone(),
+        )
+        .await,
+    );
+    // statsd_count!("ingester.startup", 1);
 
     tasks.push(backfiller::<RedisMessenger>(pool.clone(), config.clone()).await);
     // Wait for ctrl-c.
@@ -188,7 +192,7 @@ async fn handle_account(manager: &ProgramHandlerManager<'static>, data: Vec<(i64
         };
         let program_id = account_update.owner();
         let parser = manager.match_program(program_id.unwrap());
-        statsd_count!("ingester.account_update_seen", 1);
+        // statsd_count!("ingester.account_update_seen", 1);
         match parser {
             Some(p) if p.config().responds_to_account == true => {
                 let _ = p.handle_account(&account_update).map_err(|e| {
@@ -224,10 +228,13 @@ async fn handle_transaction(manager: &ProgramHandlerManager<'static>, data: Vec<
         };
         if let Some(si) = transaction.slot_index() {
             let slt_idx = format!("{}-{}", transaction.slot(), si);
-            statsd_count!("ingester.transaction_event_seen", 1, "slot-idx" => &slt_idx);
+            // statsd_count!("ingester.transaction_event_seen", 1, "slot-idx" => &slt_idx);
         }
         let seen_at = Utc::now();
-        statsd_time!("ingester.bus_ingest_time", (seen_at.timestamp_millis() - transaction.seen_at()) as u64);
+        // statsd_time!(
+        //     "ingester.bus_ingest_time",
+        //     (seen_at.timestamp_millis() - transaction.seen_at()) as u64
+        // );
         // Get account keys flatbuffers object.
         let keys = match transaction.account_keys() {
             None => {
@@ -268,11 +275,14 @@ async fn handle_transaction(manager: &ProgramHandlerManager<'static>, data: Vec<
                         .await
                         .map_err(|e| {
                             // Just for logging
-                            println!("Error in instruction handling onr program {} {:?}", str_program_id, e);
+                            println!(
+                                "Error in instruction handling onr program {} {:?}",
+                                str_program_id, e
+                            );
                             e
                         });
                     let finished_at = Utc::now();
-                    statsd_time!("ingester.ix_process_time", (finished_at.timestamp_millis() - transaction.seen_at()) as u64, "program_id" => &str_program_id);
+                    statsd_time!("ingester.ix_process_tim÷e", (finished_at.timestamp_millis() - transaction.seen_at()) as u64, "program_id" => &str_program_id);
                 }
                 _ => {
                     println!("Program Handler not found for program id {:?}", program);
