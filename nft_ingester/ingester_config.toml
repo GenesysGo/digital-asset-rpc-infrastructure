@@ -3,11 +3,11 @@ metrics_host = "idkwhatthisistbh"
 
 [database_config]
 listener_channel="backfill_item_added"
-url = "postgresql://postgres:postgres@localhost:5432/nfts?sslmode=false"
+url = "postgresql://postgres:postgres@localhost:5432/nfts?ssl_mode=false"
 
 [messenger_config]
 messenger_type = "Redis"
-connection_config = { "redis_connection_str" = "redis//localhost/"}
+connection_config = { "redis_connection_str" = "redis://localhost/"}
 
 [rpc_config]
 url = "http://localhost:8899"
