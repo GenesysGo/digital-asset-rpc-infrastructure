@@ -1,15 +1,9 @@
-use crate::api;
-use crate::api_impl;
-use crate::config;
-use crate::error;
-use crate::validation;
-
 use {
-    crate::api::RpcApiBuilder,
-    crate::api_impl::DasApi,
-    crate::config::load_config,
-    crate::config::Config,
-    crate::error::DasApiError,
+    das_api::api::RpcApiBuilder,
+    das_api::api_impl::DasApi,
+    das_api::config::load_config,
+    das_api::config::Config,
+    das_api::error::DasApiError,
     cadence::{BufferedUdpMetricSink, QueuingMetricSink, StatsdClient},
     cadence_macros::set_global_default,
     jsonrpsee::http_server::{HttpServerBuilder, RpcModule},

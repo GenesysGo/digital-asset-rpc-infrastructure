@@ -1,4 +1,4 @@
-use crate::{DasApiError, RpcModule};
+use crate::{error::DasApiError, RpcModule};
 use async_trait::async_trait;
 use digital_asset_types::rpc::filter::{AssetSorting, ListingSorting, OfferSorting};
 use digital_asset_types::rpc::response::{AssetList, ListingsList, OfferList};
