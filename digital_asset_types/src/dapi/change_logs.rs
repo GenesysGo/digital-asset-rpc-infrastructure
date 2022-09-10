@@ -1,4 +1,4 @@
-use sea_orm::sea_query::Expr;
+use sea_orm::sea_query::{Expr, PostgresQueryBuilder};
 use sea_orm::{DatabaseConnection, DbBackend};
 use {
     crate::dao::asset,
@@ -36,7 +36,7 @@ pub async fn get_proof_for_asset(
         ))
         .filter(cl_items::Column::Level.eq(0i64))
         .into_query();
-    println!("query = {query:#?}");
+    println!("query = {}", query.to_string(PostgresQueryBuilder));
 
     let leaf: Option<cl_items::Model> = cl_items::Entity::find()
         .join_rev(
