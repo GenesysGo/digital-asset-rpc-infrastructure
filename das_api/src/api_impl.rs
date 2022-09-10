@@ -45,8 +45,9 @@ pub fn not_found(asset_id: &String) -> DbErr {
 
 #[async_trait]
 impl ApiContract for DasApi {
-    async fn check_health(self: &DasApi) -> Result<(), DasApiError> {
-        &self
+    async fn check_health(&self) -> Result<(), DasApiError> {
+        println!("checking health");
+        self
             .db_connection
             .execute(Statement::from_string(
                 DbBackend::Postgres,
@@ -56,7 +57,7 @@ impl ApiContract for DasApi {
         Ok(())
     }
 
-    async fn get_asset_proof(self: &DasApi, asset_id: String) -> Result<AssetProof, DasApiError> {
+    async fn get_asset_proof(&self, asset_id: String) -> Result<AssetProof, DasApiError> {
         let id = validate_pubkey(asset_id.clone())?;
         let id_bytes = id.to_bytes().to_vec();
         get_proof_for_asset(&self.db_connection, id_bytes)
@@ -70,7 +71,7 @@ impl ApiContract for DasApi {
             .map_err(Into::into)
     }
 
-    async fn get_asset(self: &DasApi, asset_id: String) -> Result<Asset, DasApiError> {
+    async fn get_asset(&self, asset_id: String) -> Result<Asset, DasApiError> {
         let id = validate_pubkey(asset_id.clone())?;
         let id_bytes = id.to_bytes().to_vec();
         get_asset(&self.db_connection, id_bytes)
@@ -79,7 +80,7 @@ impl ApiContract for DasApi {
     }
 
     async fn get_assets_by_owner(
-        self: &DasApi,
+        &self,
         owner_address: String,
         sort_by: AssetSorting,
         limit: u32,
@@ -123,7 +124,7 @@ impl ApiContract for DasApi {
     }
 
     async fn get_listed_assets_by_owner(
-        self: &DasApi,
+        &self,
         owner_address: String,
         sort_by: ListingSorting,
         limit: u32,
@@ -167,7 +168,7 @@ impl ApiContract for DasApi {
     }
 
     async fn get_offers_by_owner(
-        self: &DasApi,
+        &self,
         owner_address: String,
         sort_by: OfferSorting,
         limit: u32,
@@ -211,7 +212,7 @@ impl ApiContract for DasApi {
     }
 
     async fn get_assets_by_group(
-        self: &DasApi,
+        &self,
         group_expression: Vec<String>,
         sort_by: AssetSorting,
         limit: u32,
@@ -258,7 +259,7 @@ impl ApiContract for DasApi {
     }
 
     async fn get_assets_by_creator(
-        self: &DasApi,
+        &self,
         creator_expression: Vec<String>,
         sort_by: AssetSorting,
         limit: u32,
