@@ -31,7 +31,7 @@ pub async fn get_proof_for_asset(
         .order_by_desc(cl_items::Column::Seq)
         .filter(Expr::cust("asset.tree_id = cl_items.tree"))
         .filter(Expr::cust_with_values(
-            "asset.id = ?::bytea",
+            "asset.id = $1::bytea",
             vec![asset_id],
         ))
         .filter(cl_items::Column::Level.eq(0i64))
