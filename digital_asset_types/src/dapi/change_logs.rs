@@ -20,6 +20,24 @@ pub async fn get_proof_for_asset(
     db: &DatabaseConnection,
     asset_id: Vec<u8>,
 ) -> Result<AssetProof, DbErr> {
+    let query = cl_items::Entity::find()
+        .join_rev(
+            JoinType::InnerJoin,
+            asset::Entity::belongs_to(cl_items::Entity)
+                .from(asset::Column::Nonce)
+                .to(cl_items::Column::LeafIdx)
+                .into(),
+        )
+        .order_by_desc(cl_items::Column::Seq)
+        .filter(Expr::cust("asset.tree_id = cl_items.tree"))
+        .filter(Expr::cust_with_values(
+            "asset.id = $1::bytea",
+            vec![asset_id.clone()],
+        ))
+        .filter(cl_items::Column::Level.eq(0i64))
+        .into_query();
+    println!("query = {query:#?}");
+
     let leaf: Option<cl_items::Model> = cl_items::Entity::find()
         .join_rev(
             JoinType::InnerJoin,
