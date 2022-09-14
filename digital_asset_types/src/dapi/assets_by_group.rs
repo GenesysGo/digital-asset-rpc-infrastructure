@@ -47,7 +47,7 @@ pub async fn get_assets_by_group(
                 asset::Entity::has_many(asset_grouping::Entity).into(),
             )
             .filter(conditions)
-            .cursor_by(asset_creators::Column::AssetId)
+            .cursor_by(asset::Column::Id)
             .before(before.clone())
             .first(limit.into())
             .all(db)
@@ -69,7 +69,7 @@ pub async fn get_assets_by_group(
                 asset::Entity::has_many(asset_grouping::Entity).into(),
             )
             .filter(conditions)
-            .cursor_by(asset_creators::Column::AssetId)
+            .cursor_by(asset::Column::Id)
             .after(after.clone())
             .first(limit.into())
             .all(db)
