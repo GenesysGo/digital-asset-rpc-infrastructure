@@ -55,7 +55,7 @@ pub trait ApiContract: Send + Sync + 'static {
         after: String,
     ) -> Result<AssetList, DasApiError>;
     async fn search_assets(
-        &mut self,
+        &self,
         search_expression: String,
         sort_by: AssetSorting,
         limit: u32,
