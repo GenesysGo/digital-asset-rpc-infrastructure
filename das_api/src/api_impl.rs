@@ -305,7 +305,7 @@ impl ApiContract for DasApi {
     }
 
     async fn search_assets(
-        &mut self,
+        &self,
         search_expression: String,
         sort_by: AssetSorting,
         limit: u32,
