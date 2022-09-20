@@ -306,21 +306,26 @@ impl ApiContract for DasApi {
 
     async fn search_assets(
         &self,
-        search_expression: String,
+        search_expression: serde_json::Value,
         sort_by: AssetSorting,
         limit: u32,
         page: u32,
         before: String,
         after: String,
     ) -> Result<AssetList, DasApiError> {
+
+        // Deserialize search assets query
+        let search_assets_query: SearchAssetsQuery = serde_json::from_value(search_expression)?;
+        
+        // Execute query
         search_assets(
             &self.db_connection,
-            search_expression,
+            search_assets_query,
             sort_by,
             limit,
             page,
-            before,
-            after,
+            before.as_bytes().to_vec(),
+            after.as_bytes().to_vec(),
         )
         .await
         .map_err(Into::into)

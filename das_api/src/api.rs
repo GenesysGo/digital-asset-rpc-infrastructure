@@ -56,7 +56,7 @@ pub trait ApiContract: Send + Sync + 'static {
     ) -> Result<AssetList, DasApiError>;
     async fn search_assets(
         &self,
-        search_expression: String,
+        search_expression: serde_json::Value,
         sort_by: AssetSorting,
         limit: u32,
         page: u32,
