@@ -5,7 +5,7 @@ use blockbuster::{
 };
 
 use crate::{error::IngesterError, BgTask};
-use plerkle_serialization::{AccountInfo, Pubkey as FBPubkey};
+use plerkle_serialization::{Pubkey as PSPubkey, *};
 use sea_orm::{DatabaseConnection, SqlxPostgresConnector};
 use solana_sdk::pubkey::Pubkey;
 use sqlx::PgPool;
@@ -36,7 +36,7 @@ impl ProgramTransformer {
         }
     }
 
-    pub fn match_program(&self, key: FBPubkey) -> Option<&Box<dyn ProgramParser>> {
+    pub fn match_program(&self, key: PSPubkey) -> Option<&Box<dyn ProgramParser>> {
         self.matchers.get(&Pubkey::new(key.0.as_slice()))
     }
 
@@ -65,12 +65,8 @@ impl ProgramTransformer {
 
     pub async fn handle_account_update<'b>(
         &self,
-        acct: AccountInfo<'b>,
+        _acct: AccountInfo<'b>,
     ) -> Result<(), IngesterError> {
-        let owner = acct.owner().unwrap();
-        if let Some(program) = self.match_program(FBPubkey::new(owner)) {
-
-        }
         Ok(())
     }
 }

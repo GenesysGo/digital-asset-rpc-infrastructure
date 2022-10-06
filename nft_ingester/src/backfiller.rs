@@ -8,7 +8,14 @@ use chrono::Utc;
 use digital_asset_types::dao::backfill_items;
 use flatbuffers::FlatBufferBuilder;
 use plerkle_messenger::{Messenger, TRANSACTION_STREAM};
-use plerkle_serialization::{TransactionInfo, TransactionInfoArgs, Pubkey as FBPubkey, CompiledInstruction, CompiledInstructionArgs, InnerInstructions, InnerInstructionsArgs};
+// use plerkle_serialization::*;
+// use plerkle_serialization::transaction_info_generated::transaction_info::{
+//     self, TransactionInfo, TransactionInfoArgs,
+// };
+use plerkle_serialization::{
+    self, CompiledInstruction, CompiledInstructionArgs, InnerInstructions, InnerInstructionsArgs,
+    Pubkey as PSPubkey, TransactionInfo, TransactionInfoArgs,
+};
 use sea_orm::{
     entity::*, query::*, sea_query::Expr, DatabaseConnection, DbBackend, DbErr, FromQueryResult,
     SqlxPostgresConnector, TryGetableMany,
@@ -19,12 +26,11 @@ use solana_sdk::{
     pubkey::Pubkey,
 };
 use solana_transaction_status::{
-    EncodedConfirmedBlock, UiInstruction::Compiled, UiRawMessage, UiTransactionEncoding,
-    UiTransactionStatusMeta,
+    option_serializer::OptionSerializer, EncodedConfirmedBlock, UiInstruction::Compiled,
+    UiRawMessage, UiTransactionEncoding, UiTransactionStatusMeta, UiInnerInstructions,
 };
 use sqlx::{self, postgres::PgListener, Pool, Postgres};
 use std::str::FromStr;
-use solana_transaction_status::option_serializer::OptionSerializer;
 use tokio::time::{sleep, Duration};
 
 // Constants used for varying delays when failures occur.
@@ -611,7 +617,7 @@ fn serialize_transaction<'a>(
         for key in account_keys.iter() {
             let key = Pubkey::from_str(key)
                 .map_err(|e| IngesterError::SerializatonError(e.to_string()))?;
-            account_keys_fb_vec.push(FBPubkey(key.to_bytes()));
+            account_keys_fb_vec.push(PSPubkey::new(&key.to_bytes()));
         }
         Some(builder.create_vector(&account_keys_fb_vec))
     } else {
@@ -619,7 +625,7 @@ fn serialize_transaction<'a>(
     };
 
     // Serialize log messages.
-    let log_messages = if let OptionSerializer::Some(log_messages) = meta.log_messages.as_ref() {
+    let log_messages = if let Some(log_messages) = Option::<&Vec<String>>::from(meta.log_messages.as_ref()) {
         let mut log_messages_fb_vec = Vec::with_capacity(log_messages.len());
         for message in log_messages {
             log_messages_fb_vec.push(builder.create_string(&message));
@@ -629,9 +635,8 @@ fn serialize_transaction<'a>(
         None
     };
 
-
     // Serialize inner instructions.
-    let inner_instructions = if let OptionSerializer::Some(inner_instructions_vec) = meta.inner_instructions.as_ref()
+    let inner_instructions = if let Some(inner_instructions_vec) = Option::<&Vec<UiInnerInstructions>>::from(meta.inner_instructions.as_ref())
     {
         let mut overall_fb_vec = Vec::with_capacity(inner_instructions_vec.len());
         for inner_instructions in inner_instructions_vec.iter() {
