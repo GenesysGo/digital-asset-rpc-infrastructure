@@ -9,7 +9,7 @@ use sea_orm::{entity::*, query::*, DbErr};
 
 pub async fn get_assets_by_group(
     db: &DatabaseConnection,
-    creator_expression: Vec<String>,
+    group_expression: Vec<String>,
     sort_by: AssetSorting,
     limit: u32,
     page: u32,
@@ -23,8 +23,8 @@ pub async fn get_assets_by_group(
     };
 
     let mut conditions = Condition::any();
-    for creator in creator_expression {
-        conditions = conditions.add(asset_creators::Column::Creator.eq(creator.clone()));
+    for group in group_expression {
+        conditions = conditions.add(asset_grouping::Column::GroupValue.eq(group.clone()));
     }
 
     let assets = if page > 0 {
@@ -47,7 +47,7 @@ pub async fn get_assets_by_group(
                 asset::Entity::has_many(asset_grouping::Entity).into(),
             )
             .filter(conditions)
-            .cursor_by(asset_creators::Column::AssetId)
+            .cursor_by(asset::Column::AssetId)
             .before(before.clone())
             .first(limit.into())
             .all(db)
@@ -69,7 +69,7 @@ pub async fn get_assets_by_group(
                 asset::Entity::has_many(asset_grouping::Entity).into(),
             )
             .filter(conditions)
-            .cursor_by(asset_creators::Column::AssetId)
+            .cursor_by(asset::Column::AssetId)
             .after(after.clone())
             .first(limit.into())
             .all(db)
